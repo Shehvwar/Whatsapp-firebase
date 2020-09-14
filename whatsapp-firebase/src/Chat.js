@@ -8,30 +8,44 @@ import EmojiEmotionsIcon from '@material-ui/icons/EmojiEmotions';
 import MicIcon from '@material-ui/icons/Mic';
 import { useParams } from 'react-router-dom'
 import db from './frebase'
+import { useStateValue } from './StateProvider'
+import firebase from "firebase";
 function Chat() {
-    const [input, setInput] = useState([])
+    const [input, setInput] = useState([]);
     const [seed, setSeed] = useState('');
-    const {roomId} = useParams()
-    const [roomName, setRoomName] = useState("")
-
+    const {roomId} = useParams();
+    const [roomName, setRoomName] = useState("");
+    const [messages, setMessages] = useState([]);
+    const [{user}, dispatch] = useStateValue()
     useEffect(() => {
       if(roomId)
       {
-          db.collection("rooms").doc(roomId).onSnapshot((snapShot) =>
-            (
-                setRoomName(snapShot.data().name)
+          db.collection("rooms")
+          .doc(roomId)
+          .onSnapshot((snapshot) =>
+            setRoomName(snapshot.data().name));
+
+
+            db.collection('rooms').doc(roomId).collection('messages').orderBy('timestamp', 'asc').onSnapshot(snapshot =>(
+                setMessages(snapshot.docs.map(doc => doc.data()))
             ))
       } 
     }, [roomId])
-    // useEffect(() => {
-    //   setSeed(Math.floor(Math.random()* 5000)) ;
+    useEffect(() => {
+      setSeed(Math.floor(Math.random()* 5000)) ;
         
-    // }, [])
+    }, [roomId])
 
   const sendMessage = (e) =>
   {
       e.preventDefault();
       console.log("clicked", input)
+
+      db.collection('rooms').doc(roomId).collection('messages').add(({
+          message:input,
+          name:user.displayName,
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+      }))
 
       setInput("");
   }
@@ -39,10 +53,11 @@ function Chat() {
         <div className = "chat">
             <div className = "chat__header">
             {/* <Avatar src = {`https://avatars.dicebear.com/api/human/${seed}.svg`}/> */}
-                <Avatar src = {`https://avatars.dicebear.com/api/human/${Math.floor(Math.random()* 5000)}.svg`}/>
+                <Avatar src = {`https://avatars.dicebear.com/api/human/${seed}.svg`}/>
                 <div className = "header__chat">
                      <h3>{roomName}</h3>
-                    <p>Time as per..</p>
+                     <p>last seen {""}
+                         {new Date (messages[messages.length-1]?.timestamp?.toDate()).toUTCString()}</p>
                 </div>  
                 <div className = "header__attachment">
                     <IconButton>
@@ -58,23 +73,26 @@ function Chat() {
                 </div>  
             </div>
             <div className = "chat__body">
-               <p className = "chat_sendMessage">
+                {messages.map(message => (
+                <p className = {`chat_sendMessage ${message.name === user.displayName && "recive_message"} `}>
+                <span className = "chat_messageName">{message.name}</span>
+                    {message.message}
+                 <span className = "chat__timeStamp">
+                 {new Date(message.timestamp?.toDate()).toUTCString()}
+                 </span>
+                
+                </p>
+                ))}
+               {/* <p className = "chat_sendMessage">
                <span className = "chat_messageName">Subuhi CEO</span>
                    Hi there
                 <span className = "chat__timeStamp">
                 3:52 ISt
                 </span>
                
-               </p>
+               </p> */}
 
-               <p className = {`chat_sendMessage ${true && "recive_message"} `}>
-               <span className = "chat_messageName">Subuhi CEO</span>
-                   Hi there
-                <span className = "chat__timeStamp">
-                3:52 ISt
-                </span>
                
-               </p>
                
             </div>
             <div className = "chat__footer">

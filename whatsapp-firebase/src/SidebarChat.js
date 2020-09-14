@@ -3,14 +3,27 @@ import React from 'react'
 import './SidebarChat.css'
 import {useEffect, useState} from 'react'
 import {Link} from 'react-router-dom'
+import db from './frebase'
 function SidebarChat({id, name, addNewChat}) {
 
     const [seed, setSeed] = useState('');
+    const [messages, setMessages] = useState("")
     useEffect(() => {
       setSeed(Math.floor(Math.random()* 5000)) ;
         
     }, [])
 
+    useEffect(()=>
+    {
+        if(id)
+        {
+            db.collection('rooms').doc(id).collection('messages').orderBy('timestamp', 'desc').
+            onSnapshot(snapshot =>(setMessages(snapshot.docs.map((doc)=>doc.data()
+            ))
+
+            ))
+        }
+    }, [id])
     const createChat = () =>
     {
        const RoomName = prompt("please enter a room name");
@@ -31,7 +44,7 @@ function SidebarChat({id, name, addNewChat}) {
                 <h3>
                     {name}
                 </h3>
-                <p>Initial</p>
+    <p>{messages[0]?.message}</p>
 
             </div>
         </div>
