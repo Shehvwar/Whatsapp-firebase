@@ -17,8 +17,7 @@ function SidebarChat({id, name, addNewChat}) {
     {
         if(id)
         {
-            db.collection('rooms').doc(id).collection('messages').orderBy('timestamp', 'desc').
-            onSnapshot(snapshot =>(setMessages(snapshot.docs.map((doc)=>doc.data()
+            db.collection('rooms').doc(id).collection('messages').orderBy('timestamp', 'desc').onSnapshot(snapshot =>(setMessages(snapshot.docs.map((doc)=>doc.data()
             ))
 
             ))
@@ -26,11 +25,14 @@ function SidebarChat({id, name, addNewChat}) {
     }, [id])
     const createChat = () =>
     {
-       const RoomName = prompt("please enter a room name");
+       const roomName = prompt("please enter a room name");
        
-       if(RoomName)
+       if(roomName)
        {
            //some database related work
+           db.collection('rooms').add({
+               name:roomName,
+           });
        }
     }
     return !addNewChat ? (
@@ -52,7 +54,7 @@ function SidebarChat({id, name, addNewChat}) {
         
     ) :(
         <div onClick = {createChat} className = "sidebarChat">
-            <h2>Create new chat</h2>
+            <h2>Create new Room</h2>
 
         </div>
     );
